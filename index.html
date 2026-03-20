@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Module - ORBI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  :root {
+    --bg: #fafbfc;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #1f2937;
+    --text-dim: #6b7280;
+    --fba: #2563eb;
+    --fba-bg: #eff6ff;
+    --fba-border: #93c5fd;
+    --awd: #7c3aed;
+    --awd-bg: #f5f3ff;
+    --awd-border: #c4b5fd;
+    --tpl: #d97706;
+    --tpl-bg: #fffbeb;
+    --tpl-border: #fde68a;
+    --auto: #0ea5e9;
+    --auto-bg: #f0f9ff;
+    --auto-border: #bae6fd;
+    --human: #8b5cf6;
+    --human-bg: #f5f3ff;
+    --human-border: #ddd6fe;
+    --store: #10b981;
+    --store-bg: #ecfdf5;
+    --store-border: #a7f3d0;
+    --transit: #f59e0b;
+    --transit-bg: #fffbeb;
+    --transit-border: #fde68a;
+    --pass: #22c55e;
+    --fail: #ef4444;
+    --accent: #0f766e;
+    --accent-bg: #f0fdfa;
+    --accent-border: #99f6e4;
+    --lfu: #2563eb;
+    --flt: #059669;
+    --orb: #dc2626;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter', -apple-system, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  .container { max-width:960px; margin:0 auto; padding:32px 20px 60px; }
+
+  /* Nav */
+  .site-nav { background:#fff; border-bottom:1px solid var(--border); padding:0 24px; display:flex; align-items:center; gap:4px; height:48px; }
+  .site-nav .brand { font-size:13px; font-weight:700; color:var(--accent); margin-right:14px; text-decoration:none; }
+  .site-nav a { font-size:13px; color:var(--text-dim); text-decoration:none; padding:5px 11px; border-radius:6px; }
+  .site-nav a:hover { background:#f3f4f6; color:var(--text); }
+  .site-nav a.active { background:var(--accent-bg); color:var(--accent); font-weight:600; }
+
+  /* Hero */
+  .hero { text-align:center; margin-bottom:48px; }
+  .hero h1 { font-size:28px; font-weight:700; margin-bottom:8px; }
+  .hero h1 span { background:linear-gradient(135deg, #0f766e, #2dd4bf); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero .subtitle { color:var(--text-dim); font-size:15px; }
+  .hero .update-time { margin-top:12px; font-size:13px; color:var(--text-dim); background:#f3f4f6; display:inline-block; padding:4px 16px; border-radius:20px; }
+
+  /* Legend */
+  .legend { display:flex; justify-content:center; gap:24px; margin-bottom:40px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); }
+  .legend-dot { width:12px; height:12px; border-radius:3px; }
+
+  /* Zone */
+  .zone-row { display:flex; gap:16px; margin-bottom:40px; }
+  .zone-box { flex:1; border-radius:14px; padding:20px; }
+  .zone-box.manual-zone { background:var(--human-bg); border:2px solid var(--human-border); }
+  .zone-box.auto-zone { background:var(--auto-bg); border:2px solid var(--auto-border); }
+  .zone-title { font-size:14px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .zone-title.manual-t { color:var(--human); }
+  .zone-title.auto-t { color:var(--auto); }
+  .zone-items { font-size:13px; color:var(--text); }
+  .zone-items li { margin-bottom:6px; list-style:none; }
+  .zone-items li::before { content:''; display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:8px; vertical-align:middle; }
+  .zone-box.manual-zone .zone-items li::before { background:var(--human); }
+  .zone-box.auto-zone .zone-items li::before { background:var(--auto); }
+
+  /* Stats */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:32px; }
+  .stat-card { background:#fff; border-radius:12px; padding:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .stat-num { font-size:1.8rem; font-weight:700; }
+  .stat-num.teal { color:var(--accent); }
+  .stat-num.blue { color:var(--fba); }
+  .stat-num.green { color:var(--pass); }
+  .stat-num.orange { color:var(--transit); }
+  .stat-label { font-size:.72rem; color:#666; margin-top:2px; }
+
+  /* Flow section */
+  .flow { margin-bottom:48px; }
+  .flow-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; padding-bottom:16px; border-bottom:2px solid var(--border); }
+  .flow-num { width:40px; height:40px; border-radius:10px; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; flex-shrink:0; }
+  .flow-num.teal { background:var(--accent); }
+  .flow-num.blue { background:var(--fba); }
+  .flow-num.purple { background:var(--awd); }
+  .flow-num.orange { background:var(--transit); }
+  .flow-num.green { background:var(--store); }
+  .flow-num.gray { background:#94a3b8; }
+  .flow-info { flex:1; }
+  .flow-info h2 { font-size:19px; font-weight:600; }
+  .flow-info p { font-size:13px; color:var(--text-dim); }
+  .flow-status { margin-left:auto; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600; flex-shrink:0; }
+  .flow-status.done { background:#dcfce7; color:#15803d; }
+  .flow-status.wip { background:#fef3c7; color:#92400e; }
+  .flow-status.planned { background:#f3f4f6; color:#6b7280; }
+
+  /* Journey timeline */
+  .journey { position:relative; }
+  .journey::before { content:''; position:absolute; left:24px; top:0; bottom:0; width:2px; background:var(--border); z-index:0; }
+  .step { display:flex; gap:20px; position:relative; }
+  .step-icon { width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; z-index:1; border:3px solid var(--bg); }
+  .step-icon.fba { background:var(--fba-bg); border-color:var(--fba-border); }
+  .step-icon.awd { background:var(--awd-bg); border-color:var(--awd-border); }
+  .step-icon.tpl { background:var(--tpl-bg); border-color:var(--tpl-border); }
+  .step-icon.auto { background:var(--auto-bg); border-color:var(--auto-border); }
+  .step-icon.human { background:var(--human-bg); border-color:var(--human-border); }
+  .step-icon.store { background:var(--store-bg); border-color:var(--store-border); }
+  .step-icon.transit { background:var(--transit-bg); border-color:var(--transit-border); }
+  .step-content { flex:1; padding-bottom:24px; }
+  .step-label { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding:2px 10px; border-radius:4px; margin-bottom:6px; }
+  .step-label.fba { background:var(--fba-bg); color:var(--fba); }
+  .step-label.awd { background:var(--awd-bg); color:var(--awd); }
+  .step-label.tpl { background:var(--tpl-bg); color:var(--tpl); }
+  .step-label.auto { background:var(--auto-bg); color:var(--auto); }
+  .step-label.human { background:var(--human-bg); color:var(--human); }
+  .step-label.store { background:var(--store-bg); color:var(--store); }
+  .step-label.transit { background:var(--transit-bg); color:var(--transit); }
+  .step-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+  .step-desc { font-size:13px; color:var(--text-dim); margin-bottom:10px; }
+
+  /* Data box */
+  .data-box { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-top:8px; }
+  .data-box h4 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:10px; }
+  .data-row { display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; font-size:13px; }
+  .data-row:last-child { margin-bottom:0; }
+  .data-key { color:var(--text-dim); min-width:140px; flex-shrink:0; }
+  .data-val { color:var(--text); font-weight:500; word-break:break-all; }
+  .data-val code { background:#e5e7eb; padding:1px 6px; border-radius:3px; font-size:12px; font-family:'SF Mono',Consolas,monospace; }
+
+  /* Entity badges */
+  .entity-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 10px; border-radius:6px; }
+  .entity-badge.lfu { background:#eff6ff; color:var(--lfu); }
+  .entity-badge.flt { background:#ecfdf5; color:var(--flt); }
+  .entity-badge.orb { background:#fef2f2; color:var(--orb); }
+
+  /* Platform tags */
+  .ptag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+  .ptag-fba { background:var(--fba-bg); color:var(--fba); }
+  .ptag-awd { background:var(--awd-bg); color:var(--awd); }
+  .ptag-dtrans { background:#fef3c7; color:#92400e; }
+  .ptag-shipbob { background:#fce4ec; color:#c62828; }
+  .ptag-wfs { background:#e3f2fd; color:#1565c0; }
+
+  /* Config grid */
+  .config-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; }
+  .config-item { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; }
+  .config-item .config-label { font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); margin-bottom:4px; }
+  .config-item .config-value { font-size:15px; font-weight:600; }
+
+  /* Summary */
+  .summary-section { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px; margin-top:40px; }
+  .summary-section h3 { font-size:18px; font-weight:600; margin-bottom:20px; }
+  .summary-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px; }
+  .summary-item { text-align:center; padding:16px; background:var(--bg); border-radius:10px; }
+  .summary-item .num { font-size:32px; font-weight:700; }
+  .summary-item .num.green { color:var(--pass); }
+  .summary-item .num.orange { color:var(--transit); }
+  .summary-item .num.blue { color:var(--fba); }
+  .summary-item .num.teal { color:var(--accent); }
+  .summary-item .label { font-size:12px; color:var(--text-dim); margin-top:4px; }
+
+  /* Architecture diagram */
+  .arch-box { background:#fff; border:1px solid var(--border); border-radius:14px; padding:24px; margin:16px 0; }
+  .arch-row { display:flex; align-items:center; gap:0; margin:12px 0; flex-wrap:wrap; justify-content:center; }
+  .arch-node { padding:10px 16px; border-radius:8px; font-size:13px; font-weight:600; text-align:center; min-width:110px; }
+  .arch-arrow { font-size:18px; color:var(--text-dim); padding:0 6px; }
+  .arch-node.src { background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; }
+  .arch-node.proc { background:var(--accent-bg); color:var(--accent); border:1px solid var(--accent-border); }
+  .arch-node.out { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+  .arch-node.api { background:var(--auto-bg); color:var(--auto); border:1px solid var(--auto-border); }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05); margin:12px 0; }
+  th { background:#f8f9fa; text-align:left; padding:10px 14px; font-weight:600; font-size:12px; color:#555; border-bottom:2px solid #eee; }
+  td { padding:8px 14px; border-bottom:1px solid #f0f0f0; font-size:13px; }
+  tr:last-child td { border-bottom:none; }
+
+  .footer { text-align:center; margin-top:48px; font-size:12px; color:var(--text-dim); }
+
+  @media(max-width:700px) {
+    .zone-row { flex-direction:column; }
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .summary-grid { grid-template-columns:repeat(2,1fr); }
+    .config-grid { grid-template-columns:1fr; }
+    .arch-row { flex-direction:column; }
+    .arch-arrow { transform:rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="." class="brand">ORBI Inventory</a>
+  <a href="index.html" class="active">Process Guide</a>
+</nav>
+
+<div class="container">
+
+  <!-- ===== HERO ===== -->
+  <div class="hero">
+    <h1><span>Inventory Module</span> Process Guide</h1>
+    <p class="subtitle">5개 플랫폼 재고 수집 &rarr; 크로스 매핑 &rarr; HTML 대시보드 &mdash; 자동화 파이프라인</p>
+    <div class="update-time">Last updated: March 20, 2026</div>
+  </div>
+
+  <!-- ===== LEGEND ===== -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--human)"></div>Manual (Playwright)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--auto)"></div>Automated (API)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--store)"></div>Data Processing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--transit)"></div>In-Transit (Real-time)</div>
+  </div>
+
+  <!-- ===== ZONE: MANUAL vs AUTO ===== -->
+  <div class="zone-row">
+    <div class="zone-box manual-zone">
+      <div class="zone-title manual-t">Manual (Playwright Download)</div>
+      <ul class="zone-items">
+        <li>Amazon Seller Central &mdash; FBA + AWD CSV</li>
+        <li>Walmart Seller Center &mdash; WFS CSV</li>
+        <li>ShipBob Dashboard &mdash; Power BI Export</li>
+        <li>Extensiv (3PL) &mdash; Stock Status Report</li>
+      </ul>
+    </div>
+    <div class="zone-box auto-zone">
+      <div class="zone-title auto-t">Automated (API Real-time)</div>
+      <ul class="zone-items">
+        <li>FBA Inbound &mdash; SP-API inventory summaries</li>
+        <li>ShipBob WRO &mdash; v2025-07 receiving API</li>
+        <li>SP-API FBA/AWD &mdash; API snapshot (comparison)</li>
+        <li>ShipBob/WFS API &mdash; API snapshot (comparison)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== STATS ===== -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num teal">5</div><div class="stat-label">Platforms</div></div>
+    <div class="stat-card"><div class="stat-num blue">3</div><div class="stat-label">Sellers / Entities</div></div>
+    <div class="stat-card"><div class="stat-num green">146K+</div><div class="stat-label">Units Tracked</div></div>
+    <div class="stat-card"><div class="stat-num orange">54K+</div><div class="stat-label">In-Transit Units</div></div>
+  </div>
+
+  <!-- ===== ARCHITECTURE ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num teal">0</div>
+      <div class="flow-info">
+        <h2>Architecture Overview</h2>
+        <p>전체 시스템 아키텍처 &mdash; 데이터 수집부터 리포트 생성까지</p>
+      </div>
+    </div>
+
+    <div class="arch-box">
+      <div style="text-align:center; font-size:13px; font-weight:600; color:var(--text-dim); margin-bottom:16px;">Monthly Warehouse Inventory (Ground Truth)</div>
+      <div class="arch-row">
+        <div class="arch-node src">Amazon SC<br><span style="font-size:11px;font-weight:400">FBA + AWD CSV</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node src">Walmart SC<br><span style="font-size:11px;font-weight:400">WFS CSV</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node src">ShipBob<br><span style="font-size:11px;font-weight:400">Power BI XLSX</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node src">Extensiv<br><span style="font-size:11px;font-weight:400">Dtrans XLSX</span></div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-arrow" style="transform:rotate(90deg);padding:8px 0">&darr;</div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-node proc">inventory_collector.py<br><span style="font-size:11px;font-weight:400">5 platform parser + SKU mapping</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node proc">inventory_report.py<br><span style="font-size:11px;font-weight:400">HTML dashboard generator</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node out">inventory_report.html<br><span style="font-size:11px;font-weight:400">Interactive dashboard</span></div>
+      </div>
+
+      <div style="border-top:2px dashed var(--border); margin:24px 0 16px;"></div>
+
+      <div style="text-align:center; font-size:13px; font-weight:600; color:var(--transit); margin-bottom:16px;">Real-time In-Transit (API)</div>
+      <div class="arch-row">
+        <div class="arch-node api">SP-API<br><span style="font-size:11px;font-weight:400">FBA inbound summaries</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node api">ShipBob API<br><span style="font-size:11px;font-weight:400">WRO receiving v2025-07</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node proc">intransit_collector.py<br><span style="font-size:11px;font-weight:400">Real-time snapshot</span></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-node out">Dashboard<br><span style="font-size:11px;font-weight:400">+N en route badges</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1: DATA SOURCES ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num blue">1</div>
+      <div class="flow-info">
+        <h2>Data Sources &amp; Collection</h2>
+        <p>5개 플랫폼에서 월별 재고 데이터 수집</p>
+      </div>
+      <div class="flow-status done">DONE</div>
+    </div>
+
+    <div class="journey">
+      <!-- FBA -->
+      <div class="step">
+        <div class="step-icon fba">&#128230;</div>
+        <div class="step-content">
+          <div class="step-label fba">Amazon FBA</div>
+          <div class="step-title">FBA Inventory Ledger</div>
+          <div class="step-desc">Seller Central에서 SELLABLE 수량만 추출. Location별 합산, ASIN별 집계.</div>
+          <div class="data-box">
+            <h4>Details</h4>
+            <div class="data-row"><span class="data-key">Source</span><span class="data-val">Seller Central &rarr; FBA Inventory Ledger Report</span></div>
+            <div class="data-row"><span class="data-key">Format</span><span class="data-val"><code>FBA {ENTITY} {YYYY-MM}.csv</code></span></div>
+            <div class="data-row"><span class="data-key">Entities</span><span class="data-val"><span class="entity-badge lfu">LFU</span> <span class="entity-badge flt">FLT</span> <span class="entity-badge orb">ORB</span></span></div>
+            <div class="data-row"><span class="data-key">Key Column</span><span class="data-val"><code>asin</code> &rarr; disposition=SELLABLE only</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AWD -->
+      <div class="step">
+        <div class="step-icon awd">&#128195;</div>
+        <div class="step-content">
+          <div class="step-label awd">Amazon AWD</div>
+          <div class="step-title">AWD Inventory Ledger</div>
+          <div class="step-desc">AWD 창고 재고. cartons &times; Package Quantity = units로 변환.</div>
+          <div class="data-box">
+            <h4>Details</h4>
+            <div class="data-row"><span class="data-key">Source</span><span class="data-val">Seller Central &rarr; AWD Inventory Ledger Report</span></div>
+            <div class="data-row"><span class="data-key">Format</span><span class="data-val"><code>AWD {ENTITY} {YYYY-MM}.csv</code></span></div>
+            <div class="data-row"><span class="data-key">Entities</span><span class="data-val"><span class="entity-badge lfu">LFU</span> <span class="entity-badge flt">FLT</span> <span class="entity-badge orb">ORB</span></span></div>
+            <div class="data-row"><span class="data-key">Calculation</span><span class="data-val"><code>ending_warehouse_balance</code> &times; <code>package_quantity</code></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dtrans -->
+      <div class="step">
+        <div class="step-icon tpl">&#127971;</div>
+        <div class="step-content">
+          <div class="step-label tpl">Extensiv (Dtrans)</div>
+          <div class="step-title">3PL Stock Status Report</div>
+          <div class="step-desc">AcrossB Workpad(Extensiv)의 Dtrans 창고 재고. ZEZEBAEBAE 고객 선택 후 export.</div>
+          <div class="data-box">
+            <h4>Details</h4>
+            <div class="data-row"><span class="data-key">Source</span><span class="data-val">zezebaebae.acrossb.net &rarr; Stock Status Report</span></div>
+            <div class="data-row"><span class="data-key">Format</span><span class="data-val"><code>Dtrans FLT {YYYY-MM}.xlsx</code></span></div>
+            <div class="data-row"><span class="data-key">Entity</span><span class="data-val"><span class="entity-badge flt">FLT only</span></span></div>
+            <div class="data-row"><span class="data-key">Mapping</span><span class="data-val">barcode / FNSKU &rarr; ASIN (via Amazon Product List)</span></div>
+            <div class="data-row"><span class="data-key">Known Issue</span><span class="data-val" style="color:var(--fail)">~306 unmapped SKUs (~29K units)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ShipBob -->
+      <div class="step">
+        <div class="step-icon tpl">&#128666;</div>
+        <div class="step-content">
+          <div class="step-label tpl">ShipBob</div>
+          <div class="step-title">Power BI Inventory Export</div>
+          <div class="step-desc">ShipBob 대시보드 Power BI에서 날짜 필터링 후 XLSX export.</div>
+          <div class="data-box">
+            <h4>Details</h4>
+            <div class="data-row"><span class="data-key">Source</span><span class="data-val">web.shipbob.com &rarr; Analytics &rarr; Power BI</span></div>
+            <div class="data-row"><span class="data-key">Format</span><span class="data-val"><code>ShipBob FLT {YYYY-MM}.xlsx</code></span></div>
+            <div class="data-row"><span class="data-key">Entity</span><span class="data-val"><span class="entity-badge flt">FLT only</span></span></div>
+            <div class="data-row"><span class="data-key">Mapping</span><span class="data-val">barcode &rarr; ASIN (via Amazon Product List)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WFS -->
+      <div class="step">
+        <div class="step-icon fba">&#128722;</div>
+        <div class="step-content">
+          <div class="step-label fba">Walmart WFS</div>
+          <div class="step-title">Inventory Reconciliation Report</div>
+          <div class="step-desc">Walmart Seller Center에서 WFS 재고 CSV 다운로드.</div>
+          <div class="data-box">
+            <h4>Details</h4>
+            <div class="data-row"><span class="data-key">Source</span><span class="data-val">seller.walmart.com &rarr; WFS Reports &rarr; Inventory reconciliation</span></div>
+            <div class="data-row"><span class="data-key">Format</span><span class="data-val"><code>WFS FLT {YYYY-MM}.csv</code></span></div>
+            <div class="data-row"><span class="data-key">Entity</span><span class="data-val"><span class="entity-badge flt">FLT only</span></span></div>
+            <div class="data-row"><span class="data-key">Mapping</span><span class="data-val">barcode &rarr; ASIN (via Amazon Product List)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: SKU MAPPING ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num green">2</div>
+      <div class="flow-info">
+        <h2>Cross-Platform SKU Mapping</h2>
+        <p>Shopify + Amazon 제품 매핑 &mdash; barcode 기반 크로스 플랫폼 연결</p>
+      </div>
+      <div class="flow-status done">DONE</div>
+    </div>
+
+    <div class="journey">
+      <div class="step">
+        <div class="step-icon store">&#128279;</div>
+        <div class="step-content">
+          <div class="step-label store">Mapping Engine</div>
+          <div class="step-title">barcode &rarr; ASIN &rarr; Product Name</div>
+          <div class="step-desc">두 개의 마스터 파일에서 barcode(EAN/UPC)를 키로 크로스 매핑. 매핑 안 되는 제품은 FNSKU fallback 사용.</div>
+          <div class="data-box">
+            <h4>Master Files</h4>
+            <div class="data-row"><span class="data-key">Shopify Products</span><span class="data-val"><code>Shopify Product List.xlsx</code> &mdash; 437 variants, barcode + title</span></div>
+            <div class="data-row"><span class="data-key">Amazon Products</span><span class="data-val"><code>Amazon Product List.xlsx</code> &mdash; 100 ASINs, EAN/UPC + FNSKU</span></div>
+          </div>
+          <div class="data-box" style="margin-top:12px">
+            <h4>Name Priority</h4>
+            <div class="data-row"><span class="data-key">1st</span><span class="data-val">Shopify Product List &rarr; Title (primary)</span></div>
+            <div class="data-row"><span class="data-key">2nd</span><span class="data-val">Amazon Product List &rarr; Title (fallback)</span></div>
+            <div class="data-row"><span class="data-key">3rd</span><span class="data-val">CSV description field (last resort)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon human">&#128270;</div>
+        <div class="step-content">
+          <div class="step-label human">Detection</div>
+          <div class="step-title">Unmapped ASIN &amp; Missing Shopify Alert</div>
+          <div class="step-desc">새 ASIN이 CSV에 등장하면 자동 감지 &rarr; 리포트에 경고 표시 + GitHub Issue 알림.</div>
+          <div class="data-box">
+            <h4>Alerts</h4>
+            <div class="data-row"><span class="data-key">Unmapped ASIN</span><span class="data-val" style="color:var(--transit)">Amazon Product List에 없는 새 ASIN &rarr; 수동 추가 필요</span></div>
+            <div class="data-row"><span class="data-key">Missing Shopify</span><span class="data-val" style="color:var(--fail)">FLT 제품이 Shopify Product List에 없을 때</span></div>
+            <div class="data-row"><span class="data-key">Exception</span><span class="data-val"><code>AMAZON_ONLY_ASINS</code> &mdash; 아마존 전용 바코드 제품 (B0DFW5SSLC)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: ENTITY STRUCTURE ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num purple">3</div>
+      <div class="flow-info">
+        <h2>Entity Structure</h2>
+        <p>3개 셀러(엔티티) &mdash; 폴더 기반 할당</p>
+      </div>
+      <div class="flow-status done">DONE</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Entity</th><th>Folder</th><th>Seller Account</th><th>Platforms</th><th>Brands</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="entity-badge lfu">LFU</span></td>
+          <td><code>grosmimi/</code></td>
+          <td>LittleFinger USA (GROSMIMI)</td>
+          <td><span class="ptag ptag-fba">FBA</span> <span class="ptag ptag-awd">AWD</span></td>
+          <td>Grosmimi, Moyuum, Nene</td>
+        </tr>
+        <tr>
+          <td><span class="entity-badge flt">FLT</span></td>
+          <td><code>fleeters/</code></td>
+          <td>Fleeters Inc</td>
+          <td><span class="ptag ptag-fba">FBA</span> <span class="ptag ptag-awd">AWD</span> <span class="ptag ptag-dtrans">Dtrans</span> <span class="ptag ptag-shipbob">ShipBob</span> <span class="ptag ptag-wfs">WFS</span></td>
+          <td>Naeiae, CHA&amp;MOM, K-MOM</td>
+        </tr>
+        <tr>
+          <td><span class="entity-badge orb">ORB</span></td>
+          <td><code>orbitool/</code></td>
+          <td>Orbitool</td>
+          <td><span class="ptag ptag-fba">FBA</span> <span class="ptag ptag-awd">AWD</span></td>
+          <td>Orbitool</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="data-box" style="margin-top:16px">
+      <h4>Entity Assignment Rule</h4>
+      <div class="data-row"><span class="data-key">Method</span><span class="data-val">Folder-based &mdash; <code>grosmimi/</code>=LFU, <code>fleeters/</code>=FLT, <code>orbitool/</code>=ORB</span></div>
+      <div class="data-row"><span class="data-key">Cross-Entity</span><span class="data-val">같은 ASIN이 여러 폴더에 있으면 양쪽 엔티티 모두에 배지 표시</span></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: DOWNLOAD METHODS ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num gray">4</div>
+      <div class="flow-info">
+        <h2>Download Methods</h2>
+        <p>Playwright 자동화 + API 스냅샷 (비교용)</p>
+      </div>
+      <div class="flow-status done">DONE</div>
+    </div>
+
+    <div class="journey">
+      <div class="step">
+        <div class="step-icon human">&#127916;</div>
+        <div class="step-content">
+          <div class="step-label human">Playwright (Ground Truth)</div>
+          <div class="step-title">download_inventory_web.py</div>
+          <div class="step-desc">브라우저 자동화로 각 플랫폼 포털에서 CSV/XLSX 직접 다운로드. 현재 MFA 때문에 반자동.</div>
+          <div class="data-box">
+            <h4>Platform Details</h4>
+            <div class="data-row"><span class="data-key">Amazon SC</span><span class="data-val">FBA + AWD x 3 entities (account switching). MFA: WhatsApp 권장</span></div>
+            <div class="data-row"><span class="data-key">Walmart SC</span><span class="data-val">"Inventory reconciliation" report. Bot detection: coordinate click + 4.5s hold</span></div>
+            <div class="data-row"><span class="data-key">ShipBob</span><span class="data-val">Power BI &rarr; <code>[aria-label="More options"]</code> &rarr; Export XLSX</span></div>
+            <div class="data-row"><span class="data-key">Extensiv</span><span class="data-val">ZEZEBAEBAE customer &rarr; Stock Status &rarr; <code>#btnRunRpt</code></span></div>
+            <div class="data-row"><span class="data-key">Output</span><span class="data-val"><code>input/{entity}/</code> folder (ground truth)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon auto">&#9889;</div>
+        <div class="step-content">
+          <div class="step-label auto">API Snapshot (Comparison)</div>
+          <div class="step-title">SP-API + ShipBob + WFS API</div>
+          <div class="step-desc">API로 자동 수집한 데이터를 Playwright 데이터와 비교. 신뢰도 검증 용도.</div>
+          <div class="data-box">
+            <h4>Comparison System</h4>
+            <div class="data-row"><span class="data-key">API Output</span><span class="data-val"><code>api_snapshots/</code> folder</span></div>
+            <div class="data-row"><span class="data-key">Compare Tool</span><span class="data-val"><code>tools/compare_inventory_snapshots.py</code></span></div>
+            <div class="data-row"><span class="data-key">Notification</span><span class="data-val">GitHub Issues &mdash; 차이 발견 시 자동 Issue 생성</span></div>
+            <div class="data-row"><span class="data-key">Goal</span><span class="data-val">API 신뢰도 입증 후 Ground Truth 전환 가능</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 5: IN-TRANSIT ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num orange">5</div>
+      <div class="flow-info">
+        <h2>In-Transit Inventory (Real-time)</h2>
+        <p>입고중 재고 API 수집 &mdash; FBA Inbound + ShipBob WRO</p>
+      </div>
+      <div class="flow-status wip">API DONE &middot; Display WIP</div>
+    </div>
+
+    <div class="journey">
+      <div class="step">
+        <div class="step-icon transit">&#9992;&#65039;</div>
+        <div class="step-content">
+          <div class="step-label transit">FBA Inbound</div>
+          <div class="step-title">SP-API Inventory Summaries</div>
+          <div class="step-desc">3개 셀러의 FBA 입고중 수량을 3단계(Working / Shipped / Receiving)로 조회.</div>
+          <div class="data-box">
+            <h4>API Details</h4>
+            <div class="data-row"><span class="data-key">Endpoint</span><span class="data-val"><code>/fba/inventory/v1/summaries?details=true</code></span></div>
+            <div class="data-row"><span class="data-key">Fields</span><span class="data-val">inboundWorkingQuantity, inboundShippedQuantity, inboundReceivingQuantity</span></div>
+            <div class="data-row"><span class="data-key">Latest Result</span><span class="data-val">2,383 units (25 ASINs) &mdash; LFU 2,311 / FLT 72 / ORB 0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon transit">&#128666;</div>
+        <div class="step-content">
+          <div class="step-label transit">ShipBob WRO</div>
+          <div class="step-title">Receiving API v2025-07</div>
+          <div class="step-desc">ShipBob WRO(Warehouse Receiving Order) 중 입고 대기/처리 중인 건 조회.</div>
+          <div class="data-box">
+            <h4>API Details</h4>
+            <div class="data-row"><span class="data-key">Endpoint</span><span class="data-val"><code>api.shipbob.com/2025-07/receiving</code></span></div>
+            <div class="data-row"><span class="data-key">Statuses</span><span class="data-val">Awaiting, PartiallyArrived, ProcessingAtHub, InTransit</span></div>
+            <div class="data-row"><span class="data-key">Latest Result</span><span class="data-val">52,267 units (239 SKUs, 3 WROs)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon auto" style="opacity:0.4">&#128683;</div>
+        <div class="step-content" style="opacity:0.6">
+          <div class="step-label auto">AWD Inbound</div>
+          <div class="step-title">API Not Available</div>
+          <div class="step-desc">AWD inbound API 엔드포인트 미제공. 필요시 수동 CSV로 대응.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-grid" style="margin-top:16px">
+      <div class="config-item"><div class="config-label">Total In-Transit</div><div class="config-value" style="color:var(--transit)">54,650</div></div>
+      <div class="config-item"><div class="config-label">FBA Inbound</div><div class="config-value">2,383</div></div>
+      <div class="config-item"><div class="config-label">ShipBob WRO</div><div class="config-value">52,267</div></div>
+      <div class="config-item"><div class="config-label">AWD Inbound</div><div class="config-value" style="color:var(--text-dim)">N/A</div></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 6: REPORT ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num green">6</div>
+      <div class="flow-info">
+        <h2>HTML Dashboard Report</h2>
+        <p>인터랙티브 HTML 대시보드 &mdash; 엔티티/브랜드 필터, 추이 차트, 변동 알림</p>
+      </div>
+      <div class="flow-status done">DONE</div>
+    </div>
+
+    <div class="journey">
+      <div class="step">
+        <div class="step-icon store">&#128202;</div>
+        <div class="step-content">
+          <div class="step-label store">Dashboard Features</div>
+          <div class="step-title">inventory_report.py &rarr; inventory_report.html</div>
+          <div class="step-desc">standalone HTML 파일 &mdash; 외부 의존성 없이 브라우저에서 바로 열기 가능.</div>
+          <div class="data-box">
+            <h4>Report Sections</h4>
+            <div class="data-row"><span class="data-key">KPI Cards</span><span class="data-val">ALL / LFU / FLT / ORB 총 재고 + FBA/AWD/3PL 분리</span></div>
+            <div class="data-row"><span class="data-key">Changes Alert</span><span class="data-val">NEW / STOCK OUT / BIG INCREASE / BIG DECREASE 자동 감지</span></div>
+            <div class="data-row"><span class="data-key">Trend Bars</span><span class="data-val">3~4개월 추이 바 (FBA / AWD / 3PL 세그먼트)</span></div>
+            <div class="data-row"><span class="data-key">Brand Summary</span><span class="data-val">브랜드별 합산 테이블 (접기/펼치기)</span></div>
+            <div class="data-row"><span class="data-key">Product Detail</span><span class="data-val">제품별 월간 수량 + 플랫폼 breakdown (클릭 확장)</span></div>
+            <div class="data-row"><span class="data-key">Unmapped Alert</span><span class="data-val">새 ASIN 감지 시 주황 경고 박스</span></div>
+            <div class="data-row"><span class="data-key">Missing Shopify</span><span class="data-val">FLT 제품 Shopify 미등록 시 빨간 경고 박스</span></div>
+          </div>
+          <div class="data-box" style="margin-top:12px">
+            <h4>Interactive Features</h4>
+            <div class="data-row"><span class="data-key">Search</span><span class="data-val">제품명/ASIN 검색 (sticky toolbar)</span></div>
+            <div class="data-row"><span class="data-key">Entity Filter</span><span class="data-val">ALL / LFU / FLT / ORB 필터링</span></div>
+            <div class="data-row"><span class="data-key">Sort</span><span class="data-val">Total / Change % / Name A-Z</span></div>
+            <div class="data-row"><span class="data-key">Scroll-to-Product</span><span class="data-val">Changes 클릭 시 해당 제품으로 자동 스크롤 + 하이라이트</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 7: FILE STRUCTURE ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num gray">7</div>
+      <div class="flow-info">
+        <h2>File Structure</h2>
+        <p>프로젝트 디렉토리 구조</p>
+      </div>
+    </div>
+
+    <div class="data-box">
+      <h4>Directory Layout</h4>
+      <pre style="font-size:13px; line-height:1.8; font-family:'SF Mono',Consolas,monospace; overflow-x:auto;">
+agents/inventory_v2/
+  config.py                     # Entity, brand, path config
+  sku_mapper.py                 # Cross-platform SKU mapping
+  inventory_report.py           # HTML dashboard generator
+  collectors/
+    inventory_collector.py      # 5 platform CSV/XLSX parser
+    intransit_collector.py      # Real-time in-transit API
+    download_inventory.py       # SP-API FBA/AWD downloader
+    download_inventory_web.py   # Playwright web portal downloader
+  input/
+    grosmimi LFU/               # LFU entity files
+      FBA LFU 2026-02.csv
+      AWD LFU 2026-02.csv
+    fleeters FLT/               # FLT entity files
+      FBA FLT 2026-02.csv
+      AWD FLT 2026-02.csv
+      Dtrans FLT 2026-02.xlsx
+      ShipBob FLT 2026-02.xlsx
+      WFS FLT 2026-02.csv
+    orbitool ORB/               # ORB entity files
+      FBA ORB 2026-02.csv
+      AWD ORB 2026-02.csv
+  api_snapshots/                # API comparison data
+  output/
+    inventory_report.html       # Generated dashboard</pre>
+    </div>
+  </div>
+
+  <!-- ===== STEP 8: OPERATIONAL GUIDE ===== -->
+  <div class="flow">
+    <div class="flow-header">
+      <div class="flow-num teal">8</div>
+      <div class="flow-info">
+        <h2>Operational Guide</h2>
+        <p>월별 운영 절차</p>
+      </div>
+    </div>
+
+    <div class="journey">
+      <div class="step">
+        <div class="step-icon human">&#49;&#65039;&#8419;</div>
+        <div class="step-content">
+          <div class="step-label human">Step 1 &mdash; Monthly</div>
+          <div class="step-title">Download Inventory Files</div>
+          <div class="step-desc">매월 초 이전 달 데이터 수집. Playwright 스크립트 실행 또는 수동 다운로드.</div>
+          <div class="data-box">
+            <div class="data-row"><span class="data-key">Command</span><span class="data-val"><code>py -X utf8 collectors/download_inventory_web.py --month 2026-02</code></span></div>
+            <div class="data-row"><span class="data-key">Note</span><span class="data-val">Amazon MFA 필요 &rarr; WhatsApp 인증 선택</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon store">&#50;&#65039;&#8419;</div>
+        <div class="step-content">
+          <div class="step-label store">Step 2 &mdash; Monthly</div>
+          <div class="step-title">Generate Report</div>
+          <div class="step-desc">다운로드 완료 후 리포트 생성.</div>
+          <div class="data-box">
+            <div class="data-row"><span class="data-key">Command</span><span class="data-val"><code>py -X utf8 agents/inventory_v2/inventory_report.py</code></span></div>
+            <div class="data-row"><span class="data-key">Output</span><span class="data-val"><code>output/inventory_report.html</code></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon transit">&#51;&#65039;&#8419;</div>
+        <div class="step-content">
+          <div class="step-label transit">Step 3 &mdash; Anytime</div>
+          <div class="step-title">Check In-Transit</div>
+          <div class="step-desc">실시간 입고중 재고 확인 (API 호출).</div>
+          <div class="data-box">
+            <div class="data-row"><span class="data-key">Command</span><span class="data-val"><code>py -X utf8 collectors/intransit_collector.py</code></span></div>
+            <div class="data-row"><span class="data-key">Option</span><span class="data-val"><code>--seller grosmimi</code> &mdash; 특정 셀러만 조회</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-icon auto">&#52;&#65039;&#8419;</div>
+        <div class="step-content">
+          <div class="step-label auto">Step 4 &mdash; On Alert</div>
+          <div class="step-title">Handle Unmapped ASINs</div>
+          <div class="step-desc">리포트에서 Unmapped ASIN 경고가 뜨면 Amazon Product List.xlsx에 수동 추가.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ROADMAP ===== -->
+  <div class="summary-section">
+    <h3>Roadmap</h3>
+    <div class="summary-grid">
+      <div class="summary-item"><div class="num green">5/5</div><div class="label">Phase 1-2<br>Data Collection</div></div>
+      <div class="summary-item"><div class="num green">Done</div><div class="label">Phase 5<br>In-Transit API</div></div>
+      <div class="summary-item"><div class="num orange">WIP</div><div class="label">Phase 5<br>Report Display</div></div>
+      <div class="summary-item"><div class="num blue">Planned</div><div class="label">Phase 3<br>Sales Velocity</div></div>
+    </div>
+    <table style="margin-top:20px">
+      <thead><tr><th>Phase</th><th>Description</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Phase 1</td><td>SKU Cross-Platform Mapping (Shopify + Amazon)</td><td><span class="ptag" style="background:#dcfce7;color:#15803d">DONE</span></td></tr>
+        <tr><td>Phase 2</td><td>Inventory Quantities &mdash; FBA + AWD + Dtrans + ShipBob + WFS</td><td><span class="ptag" style="background:#dcfce7;color:#15803d">DONE</span></td></tr>
+        <tr><td>Phase 5</td><td>In-Transit API Collection (FBA Inbound + ShipBob WRO)</td><td><span class="ptag" style="background:#dcfce7;color:#15803d">DONE</span></td></tr>
+        <tr><td>Phase 5</td><td>In-Transit Report Display (KPI card + panel + badges)</td><td><span class="ptag" style="background:#fef3c7;color:#92400e">WIP</span></td></tr>
+        <tr><td>Phase 3</td><td>Sales Velocity + Months of Health (MOH)</td><td><span class="ptag" style="background:#f3f4f6;color:#6b7280">PLANNED</span></td></tr>
+        <tr><td>Phase 4</td><td>Dashboard Tabs (Summary / Entity / Brand / Value)</td><td><span class="ptag" style="background:#f3f4f6;color:#6b7280">PLANNED</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    ORBI Inventory Module &middot; Orbiters Dev Team &middot; Auto-generated guide
+  </div>
+
+</div>
+</body>
+</html>
