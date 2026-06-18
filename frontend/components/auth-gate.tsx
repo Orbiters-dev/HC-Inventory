@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AppShell } from "@/components/app-shell";
 import { fetchSession, type Session } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/login"];
@@ -50,5 +51,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  return <>{children}</>;
+  // 인증 완료 + 비번변경 불요 = 정상 진입 → 사이드바 셸로 감싼다.
+  // (위 분기들: /login·로딩(null)·미인증·강제변경 상태는 셸 미마운트)
+  return <AppShell>{children}</AppShell>;
 }

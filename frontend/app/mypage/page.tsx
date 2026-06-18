@@ -1,20 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { fetchSession, signOut } from "@/lib/auth";
 import { BASE_PATH } from "@/lib/constants";
 import { getCSRFToken } from "@/lib/csrf";
 
 export default function MyPage() {
   const router = useRouter();
+  const [account, setAccount] = useState("");
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchSession().then((s) => setAccount(s.user ?? ""));
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,19 +50,40 @@ export default function MyPage() {
   }
 
   async function onLogout() {
-    await fetch(`${BASE_PATH}/auth/logout/`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "X-CSRFToken": getCSRFToken() },
-    });
-    router.replace("/login");
+    // signOut 은 fetch 만 — 이동은 finally 가 보장(실패해도 로그인 화면으로).
+    try {
+      await signOut();
+    } finally {
+      router.replace("/login");
+    }
   }
 
   return (
-    <div className="mx-auto max-w-sm p-6">
+    <div className="mx-auto max-w-md space-y-6 p-6">
+      <div>
+        <h1 className="text-xl font-semibold">프로필</h1>
+        <p className="text-muted-foreground text-sm">
+          계정 정보와 비밀번호를 관리합니다.
+        </p>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>마이페이지 — 비밀번호 변경</CardTitle>
+          <CardTitle>계정 정보</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-foreground">아이디</dt>
+              <dd className="font-medium">{account || "—"}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>비밀번호 변경</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
@@ -78,11 +105,12 @@ export default function MyPage() {
               {loading ? "변경 중…" : "비밀번호 변경"}
             </Button>
           </form>
-          <Button variant="outline" className="mt-3 w-full" onClick={onLogout}>
-            로그아웃
-          </Button>
         </CardContent>
       </Card>
+
+      <Button variant="outline" className="w-full" onClick={onLogout}>
+        로그아웃
+      </Button>
     </div>
   );
 }
