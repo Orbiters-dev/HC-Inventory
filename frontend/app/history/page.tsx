@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BASE_PATH } from "@/lib/constants";
+import { getCSRFToken } from "@/lib/csrf";
 import { INPUT_FIELDS, RESULT_FIELDS } from "@/lib/result-labels";
 
 interface LogRow {
@@ -53,6 +56,24 @@ export default function HistoryPage() {
     }
   }
 
+  async function handleDelete(id: number) {
+    if (!window.confirm("이 계산 이력을 삭제할까요? 되돌릴 수 없습니다.")) return;
+    try {
+      const r = await fetch(`${BASE_PATH}/api/calculation-logs/${id}/`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "X-CSRFToken": getCSRFToken() },
+      });
+      if (!r.ok && r.status !== 204) throw new Error();
+      setRows((prev) => prev.filter((x) => x.id !== id));
+      setExpandedId(null);
+      setDetail(null);
+      toast.success("이력을 삭제했습니다.");
+    } catch {
+      toast.error("삭제에 실패했습니다.");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl p-6">
       <Card>
@@ -94,7 +115,10 @@ export default function HistoryPage() {
                           불러오는 중…
                         </p>
                       ) : detail ? (
-                        <LogDetailView d={detail} />
+                        <LogDetailView
+                          d={detail}
+                          onDelete={() => handleDelete(r.id)}
+                        />
                       ) : (
                         <p className="text-muted-foreground px-1 py-2 text-sm">
                           상세를 불러오지 못했습니다.
@@ -112,7 +136,13 @@ export default function HistoryPage() {
   );
 }
 
-function LogDetailView({ d }: { d: LogDetail }) {
+function LogDetailView({
+  d,
+  onDelete,
+}: {
+  d: LogDetail;
+  onDelete: () => void;
+}) {
   return (
     <div className="bg-muted/30 space-y-4 rounded-md p-4">
       <Section
@@ -134,6 +164,11 @@ function LogDetailView({ d }: { d: LogDetail }) {
           <p className="text-sm whitespace-pre-wrap">{String(d.memo)}</p>
         </div>
       ) : null}
+      <div className="flex justify-end border-t pt-3">
+        <Button variant="destructive" size="sm" onClick={onDelete}>
+          이 이력 삭제
+        </Button>
+      </div>
     </div>
   );
 }
