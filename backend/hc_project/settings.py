@@ -65,17 +65,26 @@ TEMPLATES = [
 ]
 
 # --- DB: 전용 PostgreSQL (5434, WONGI 5433 과 프로세스 분리). 전부 env ---
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("HC_DB_NAME", "hc_inventory"),
-        "USER": os.environ.get("HC_DB_USER", "hc_user"),
-        "PASSWORD": os.environ.get("HC_DB_PASSWORD", ""),
-        "HOST": os.environ.get("HC_DB_HOST", "127.0.0.1"),
-        "PORT": os.environ.get("HC_DB_PORT", "5434"),
-        # 전용 cluster 라 statement_timeout 미설정(PG 기본 0=무제한) → 이관/재집계 timeout 비위험.
+# HC_DB_ENGINE=sqlite 면 로컬/CI 테스트용 sqlite (운영은 postgresql 기본).
+if os.environ.get("HC_DB_ENGINE", "postgresql") == "sqlite":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.environ.get("HC_DB_NAME", str(BASE_DIR / "hc_dev.sqlite3")),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("HC_DB_NAME", "hc_inventory"),
+            "USER": os.environ.get("HC_DB_USER", "hc_user"),
+            "PASSWORD": os.environ.get("HC_DB_PASSWORD", ""),
+            "HOST": os.environ.get("HC_DB_HOST", "127.0.0.1"),
+            "PORT": os.environ.get("HC_DB_PORT", "5434"),
+            # 전용 cluster 라 statement_timeout 미설정(PG 기본 0) → 이관/재집계 timeout 비위험.
+        }
+    }
 
 AUTH_USER_MODEL = "hc_auth.ExternalUser"
 
