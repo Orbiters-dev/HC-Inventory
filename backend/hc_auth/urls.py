@@ -1,13 +1,12 @@
-"""hc_auth 라우팅.
+"""hc_auth 라우팅 (단일계정 세션 인증)."""
 
-P5 에서 배선:
-  - login/            (POST, 세션 로그인)
-  - logout/           (POST)
-  - session/status/   (GET, FE AuthGate)
-  - change-password/  (POST, 마이페이지 비번변경 + 초기PW 강제변경)
-"""
+from django.urls import path
 
+from . import views
 
 urlpatterns = [
-    # P5 에서 채움
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    path("session/status/", views.session_status, name="session_status"),
+    path("change-password/", views.change_password, name="change_password"),
 ]
