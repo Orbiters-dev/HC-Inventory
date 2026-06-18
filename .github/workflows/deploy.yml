@@ -23,7 +23,8 @@ jobs:
       - name: Deploy via forced-command SSH
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          # DEPLOY_KEY 는 base64 인코딩된 개인키(한 줄) — multiline secret 줄바꿈 손상 방지
+          echo "${{ secrets.DEPLOY_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # forced-command 라 명령 인자는 무시되고 EC2 의 hc-deploy.sh 가 실행됨
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
