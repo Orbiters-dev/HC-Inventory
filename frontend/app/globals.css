@@ -1,0 +1,301 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Tailwind v4 uses the `@theme` block to declare tokens. These mirror the
+ * shadcn/ui CSS-variable defaults (new-york style) so sidebar-07 and the
+ * other generated blocks work out of the box. Override freely — this is a
+ * single source of truth for both light and dark variants. */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* shadcn new-york default tokens (oklch) — single source of truth.
+   * R6 UI/UX PR-A (2026-05-07): chart-* hsl 표기를 oklch 로 통일 + semantic
+   * warning/success/info 추가. delta arrow 등 hardcoded text-emerald/rose
+   * 제거 위한 prerequisite. */
+  --radius: 0.625rem;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.153 0.006 107.1);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.153 0.006 107.1);
+  --primary: oklch(0.228 0.013 107.4);
+  --primary-foreground: oklch(0.988 0.003 106.5);
+  --secondary: oklch(0.966 0.005 106.5);
+  --secondary-foreground: oklch(0.228 0.013 107.4);
+  --muted: oklch(0.966 0.005 106.5);
+  --muted-foreground: oklch(0.58 0.031 107.3);
+  --accent: oklch(0.966 0.005 106.5);
+  --accent-foreground: oklch(0.228 0.013 107.4);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* R6 UI/UX PR-A: semantic state tokens — delta arrows / status badges /
+   * alert backgrounds 가 hardcoded emerald/rose/amber/sky 사용하던 것을
+   * 본 token 으로 통일. light mode 채도 적정 (saturation 0.15 ~ 0.20). */
+  --success: oklch(0.625 0.18 145);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.71 0.18 70);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.62 0.16 230);
+  --info-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.93 0.007 106.5);
+  --input: oklch(0.93 0.007 106.5);
+  --ring: oklch(0.737 0.021 106.9);
+  --sidebar: oklch(0.988 0.003 106.5);
+  --sidebar-foreground: oklch(0.153 0.006 107.1);
+  --sidebar-primary: oklch(0.228 0.013 107.4);
+  --sidebar-primary-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-accent: oklch(0.966 0.005 106.5);
+  --sidebar-accent-foreground: oklch(0.228 0.013 107.4);
+  --sidebar-border: oklch(0.93 0.007 106.5);
+  --sidebar-ring: oklch(0.737 0.021 106.9);
+
+  /* chart-* — oklch 통일 (light mode, recharts 호환 hsl alt 도 지원) */
+  --chart-1: oklch(0.871 0.15 154.449);
+  --chart-2: oklch(0.723 0.219 149.579);
+  --chart-3: oklch(0.627 0.194 149.214);
+  --chart-4: oklch(0.527 0.154 150.069);
+  --chart-5: oklch(0.448 0.119 151.328);
+
+  /* devlog 달력 heatmap — 작업량 5단계 ramp (info 계열, 진할수록 작업 많음).
+   * light: 밝음→중간, 위 텍스트(--primary, 어두움) AA 대비 충족. */
+  --devlog-heat-1: oklch(0.93 0.03 230);
+  --devlog-heat-2: oklch(0.87 0.05 230);
+  --devlog-heat-3: oklch(0.81 0.08 230);
+  --devlog-heat-4: oklch(0.74 0.11 230);
+  --devlog-heat-5: oklch(0.67 0.13 230);
+
+  /* Phase 5a — DEVLOG 우선순위 토큰 (urgent/high/medium/low solid + foreground).
+   * Tasklify/Instagantt 의 priority pill 패턴. medium 은 dark text 로 AA 충족.
+   * audit C1 정정: high/low lightness 낮춤 (0.65 → 0.55) → white text 위 AA 4.5:1 확보. */
+  --devlog-priority-urgent: oklch(0.5 0.22 25);
+  --devlog-priority-urgent-fg: oklch(0.985 0 0);
+  --devlog-priority-high: oklch(0.55 0.2 50);
+  --devlog-priority-high-fg: oklch(0.985 0 0);
+  --devlog-priority-medium: oklch(0.82 0.16 85);
+  --devlog-priority-medium-fg: oklch(0.18 0.02 85);
+  --devlog-priority-low: oklch(0.5 0.14 230);
+  --devlog-priority-low-fg: oklch(0.985 0 0);
+  /* A.1 enum 확장 — none/not_set 중립 토큰 (밑줄 없는 'notset' 키, Tailwind _→공백 회피). */
+  --devlog-priority-none: oklch(0.5 0.03 270);
+  --devlog-priority-none-fg: oklch(0.985 0 0);
+  --devlog-priority-notset: oklch(0.88 0.01 270);
+  --devlog-priority-notset-fg: oklch(0.32 0.02 270);
+
+  /* Phase 5a — DEVLOG label 토큰 (7 색 soft pastel — DevlogTrack.COLOR_TOKEN_CHOICES 정합).
+   * "" (default) tone 은 기존 --muted/--muted-foreground 재사용 (별 토큰 0). */
+  --devlog-label-indigo: oklch(0.65 0.18 270);
+  --devlog-label-indigo-fg: oklch(0.35 0.18 270);
+  --devlog-label-emerald: oklch(0.65 0.15 155);
+  --devlog-label-emerald-fg: oklch(0.32 0.15 155);
+  --devlog-label-amber: oklch(0.78 0.17 75);
+  --devlog-label-amber-fg: oklch(0.36 0.17 75);
+  --devlog-label-rose: oklch(0.65 0.2 15);
+  --devlog-label-rose-fg: oklch(0.35 0.2 15);
+  --devlog-label-sky: oklch(0.7 0.14 230);
+  --devlog-label-sky-fg: oklch(0.36 0.14 230);
+  --devlog-label-violet: oklch(0.6 0.2 295);
+  --devlog-label-violet-fg: oklch(0.32 0.2 295);
+  --devlog-label-slate: oklch(0.6 0.02 250);
+  --devlog-label-slate-fg: oklch(0.3 0.02 250);
+
+  /* BSR Top100 큐레이션 태그 — 5 대분류 hue 패밀리 (devlog-label oklch 선례).
+   * 소분류 음영(연→진)은 컴포넌트가 color-mix 단계로 파생 (tag-colors.ts).
+   * base = dot/세그먼트 vivid 색, -fg = 연한 tint bg 위 dark 텍스트 (AA ≥ 4.5:1). */
+  --bsr-tag-material: oklch(0.62 0.16 250); /* blue */
+  --bsr-tag-material-fg: oklch(0.4 0.13 250);
+  --bsr-tag-dm: oklch(0.64 0.12 185); /* teal */
+  --bsr-tag-dm-fg: oklch(0.4 0.1 185);
+  --bsr-tag-age: oklch(0.74 0.15 75); /* amber */
+  --bsr-tag-age-fg: oklch(0.46 0.12 75);
+  --bsr-tag-volume: oklch(0.62 0.19 300); /* violet */
+  --bsr-tag-volume-fg: oklch(0.42 0.16 300);
+  --bsr-tag-price: oklch(0.64 0.2 18); /* rose */
+  --bsr-tag-price-fg: oklch(0.46 0.17 18);
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.153 0.006 107.1);
+}
+
+.dark {
+  --background: oklch(0.153 0.006 107.1);
+  --foreground: oklch(0.988 0.003 106.5);
+  --card: oklch(0.228 0.013 107.4);
+  --card-foreground: oklch(0.988 0.003 106.5);
+  --popover: oklch(0.228 0.013 107.4);
+  --popover-foreground: oklch(0.988 0.003 106.5);
+  --primary: oklch(0.93 0.007 106.5);
+  --primary-foreground: oklch(0.228 0.013 107.4);
+  --secondary: oklch(0.286 0.016 107.4);
+  --secondary-foreground: oklch(0.988 0.003 106.5);
+  --muted: oklch(0.286 0.016 107.4);
+  --muted-foreground: oklch(0.737 0.021 106.9);
+  --accent: oklch(0.286 0.016 107.4);
+  --accent-foreground: oklch(0.988 0.003 106.5);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* R6 UI/UX PR-A: dark mode semantic — saturation 약간 낮춤 (눈 피로) */
+  --success: oklch(0.7 0.16 145);
+  --success-foreground: oklch(0.145 0 0);
+  --warning: oklch(0.78 0.16 70);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.7 0.14 230);
+  --info-foreground: oklch(0.145 0 0);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.58 0.031 107.3);
+  --sidebar: oklch(0.228 0.013 107.4);
+  --sidebar-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-accent: oklch(0.286 0.016 107.4);
+  --sidebar-accent-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.58 0.031 107.3);
+
+  --chart-1: oklch(0.871 0.15 154.449);
+  --chart-2: oklch(0.723 0.219 149.579);
+  --chart-3: oklch(0.627 0.194 149.214);
+  --chart-4: oklch(0.527 0.154 150.069);
+  --chart-5: oklch(0.448 0.119 151.328);
+
+  /* devlog heatmap — dark: 어두움→중간, 위 텍스트(--primary, 밝음) AA 대비 충족. */
+  --devlog-heat-1: oklch(0.3 0.04 230);
+  --devlog-heat-2: oklch(0.35 0.06 230);
+  --devlog-heat-3: oklch(0.4 0.09 230);
+  --devlog-heat-4: oklch(0.45 0.12 230);
+  --devlog-heat-5: oklch(0.5 0.14 230);
+
+  /* Phase 5a — DEVLOG 우선순위 토큰 (dark variant — bg 어둡게 + white text AA). */
+  --devlog-priority-urgent: oklch(0.55 0.22 25);
+  --devlog-priority-urgent-fg: oklch(0.985 0 0);
+  --devlog-priority-high: oklch(0.58 0.2 50);
+  --devlog-priority-high-fg: oklch(0.985 0 0);
+  --devlog-priority-medium: oklch(0.78 0.16 85);
+  --devlog-priority-medium-fg: oklch(0.15 0.02 85);
+  --devlog-priority-low: oklch(0.55 0.14 230);
+  --devlog-priority-low-fg: oklch(0.985 0 0);
+  /* A.1 enum 확장 — none/not_set 중립 토큰 (dark variant). */
+  --devlog-priority-none: oklch(0.5 0.02 270);
+  --devlog-priority-none-fg: oklch(0.985 0 0);
+  --devlog-priority-notset: oklch(0.4 0.015 270);
+  --devlog-priority-notset-fg: oklch(0.95 0.01 270);
+
+  /* Phase 5a — DEVLOG label 토큰 (dark variant — foreground 모두 밝게 AA).
+   * audit C2 정정: amber-fg dark 를 0.2 → 0.88 (어두운 bg 위 어두운 text 깨짐 차단). */
+  --devlog-label-indigo: oklch(0.7 0.18 270);
+  --devlog-label-indigo-fg: oklch(0.88 0.1 270);
+  --devlog-label-emerald: oklch(0.7 0.15 155);
+  --devlog-label-emerald-fg: oklch(0.88 0.08 155);
+  --devlog-label-amber: oklch(0.82 0.17 75);
+  --devlog-label-amber-fg: oklch(0.88 0.1 75);
+  --devlog-label-rose: oklch(0.7 0.2 15);
+  --devlog-label-rose-fg: oklch(0.88 0.12 15);
+  --devlog-label-sky: oklch(0.74 0.14 230);
+  --devlog-label-sky-fg: oklch(0.88 0.08 230);
+  --devlog-label-violet: oklch(0.66 0.2 295);
+  --devlog-label-violet-fg: oklch(0.88 0.12 295);
+  --devlog-label-slate: oklch(0.65 0.02 250);
+  --devlog-label-slate-fg: oklch(0.85 0.02 250);
+
+  /* BSR 태그 — dark variant. base 약간 밝게(어두운 tint 위 vivid dot), -fg 밝게(AA). */
+  --bsr-tag-material: oklch(0.7 0.15 250);
+  --bsr-tag-material-fg: oklch(0.86 0.08 250);
+  --bsr-tag-dm: oklch(0.72 0.11 185);
+  --bsr-tag-dm-fg: oklch(0.86 0.07 185);
+  --bsr-tag-age: oklch(0.8 0.15 75);
+  --bsr-tag-age-fg: oklch(0.88 0.09 75);
+  --bsr-tag-volume: oklch(0.7 0.18 300);
+  --bsr-tag-volume-fg: oklch(0.86 0.1 300);
+  --bsr-tag-price: oklch(0.72 0.19 18);
+  --bsr-tag-price-fg: oklch(0.88 0.11 18);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* R6.2 PR-4 (2026-05-06): next/font Inter — html className 으로 --font-sans 주입.
+   * Tailwind v4 의 font-sans utility 가 본 var 사용 + 한글 fallback chain
+   * (Pretendard / Apple SD Gothic Neo / Malgun Gothic). */
+  --font-sans:
+    var(--font-sans), system-ui, -apple-system, "Segoe UI", "Pretendard",
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-heading: var(--font-sans);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    @apply border-border outline-ring/50;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    @apply bg-background text-foreground;
+  }
+
+  /* WCAG 2.4.7 Focus Visible (Level AA) — global fallback.
+   * shadcn/ui 컴포넌트는 자체 focus-visible:ring 을 가지지만, native
+   * `<button>` / `<a>` / native form control 들은 outline 누락 가능.
+   * 본 fallback 은 그런 element 들이 :focus-visible 시 ring 을 받도록 보장.
+   * shadcn 컴포넌트는 outline-none + 자체 ring 적용으로 영향 없음.
+   * audit doc round 4 (2026-05-08) A11 finding 대응. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
