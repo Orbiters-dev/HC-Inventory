@@ -407,6 +407,9 @@ def calculate_costs_view(request):
                 walmart_category=data["walmartCategory"],
                 own_shop_price=data["ownShopPrice"],
                 own_aov=data["ownAOV"],
+                # 제품 식별(선택). str 강제 + 길이 방어(DB CharField(200)/TextField 보호).
+                product_name=str(data.get("productName", ""))[:200],
+                memo=str(data.get("memo", ""))[:2000],
                 total_products=result["Total Products"],
                 estimated_price_own=result["[Price] Own Shop"],
                 estimated_price_amz=result["[Price] Amazon"],
@@ -488,3 +491,14 @@ class CalculationLogListView(generics.ListAPIView):
 
     serializer_class = CalculationLogSerializer
     queryset = CalculationLog.objects.all().order_by("-created_at")
+
+
+class CalculationLogDetailView(generics.RetrieveAPIView):
+    """계산 이력 상세 — 단일 로그 전체(입력+결과, fields='__all__').
+
+    단일계정이라 소유자 필터 불필요, 전역 IsAuthenticated 로 보호.
+    RetrieveAPIView 라 응답은 평면 객체(목록의 페이지네이션 envelope 와 다름).
+    """
+
+    serializer_class = CalculationLogSerializer
+    queryset = CalculationLog.objects.all()

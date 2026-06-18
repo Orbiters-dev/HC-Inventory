@@ -5,12 +5,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Calculator as CalculatorIcon, Loader2 } from "lucide-react";
+import {
+  Calculator as CalculatorIcon,
+  Copy,
+  Download,
+  Loader2,
+} from "lucide-react";
 
 import { BASE_PATH } from "@/lib/constants";
 import { getCSRFToken } from "@/lib/csrf";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -28,6 +39,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  RESULT_FIELDS,
+  buildExportRows,
+  type CalculatorResults,
+  type ResultGroup,
+} from "@/lib/result-labels";
 
 // API contract: Django POST /api/calculate_costs/ 응답 shape.
 // key 는 backend 한글/공백/특수문자 포함 — string index signature.
@@ -57,6 +74,8 @@ const schema = z.object({
       "자사몰 가격은 0 보다 커야 합니다. 자사몰 미판매 시 임의 양수 입력",
     ),
   ownAOV: z.coerce.number().min(0, "0 이상"),
+  productName: z.string().max(200, "200자 이내").optional().default(""),
+  memo: z.string().max(2000, "2000자 이내").optional().default(""),
 });
 
 // zod `z.coerce.number()` 는 input=unknown / output=number.
@@ -64,8 +83,6 @@ const schema = z.object({
 // onSubmit data 는 output (number 정합).
 type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
-
-type CalculatorResults = Record<string, number | string>;
 
 const defaultValues: FormInput = {
   numPallets: 0,
@@ -82,6 +99,8 @@ const defaultValues: FormInput = {
   walmartCategory: "",
   ownShopPrice: 0,
   ownAOV: 0,
+  productName: "",
+  memo: "",
 };
 
 function fmt(n: number, digits = 2): string {
@@ -172,6 +191,7 @@ function CalculatorForm() {
   const [walmartCategories, setWalmartCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<CalculatorResults | null>(null);
+  const [resultProductName, setResultProductName] = useState("");
 
   const form = useForm<FormInput, undefined, FormValues>({
     resolver: zodResolver(schema),
@@ -219,6 +239,7 @@ function CalculatorForm() {
       if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
       const data = (await res.json()) as CalculatorAPIResponse;
       setResults(computeResults(data));
+      setResultProductName(values.productName ?? "");
       toast.success("계산이 완료되었습니다.", { id: toastId });
     } catch (err) {
       console.error("calculate fail:", err);
@@ -288,6 +309,45 @@ function CalculatorForm() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">제품 정보 (선택)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="productName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>제품명</FormLabel>
+                    <FormControl>
+                      <Input placeholder="예: 베이비 욕조 A형" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="memo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>메모</FormLabel>
+                    <FormControl>
+                      <textarea
+                        {...field}
+                        rows={2}
+                        placeholder="견적 메모(거래처 · 조건 등)"
+                        className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">수출 규격 (공통)</CardTitle>
@@ -418,111 +478,101 @@ function CalculatorForm() {
         </form>
       </Form>
 
-      {results && <ResultsView results={results} />}
+      {results && (
+        <ResultsView results={results} productName={resultProductName} />
+      )}
     </div>
   );
 }
 
-function ResultsView({ results }: { results: CalculatorResults }) {
+function ResultsView({
+  results,
+  productName,
+}: {
+  results: CalculatorResults;
+  productName?: string;
+}) {
+  // 라벨/그룹/키 = RESULT_FIELDS 단일 소스. 화면·복사·CSV·이력상세가 동일 소스를 본다.
+  const byGroup = (g: ResultGroup) =>
+    RESULT_FIELDS.filter((f) => f.group === g).map((f) => ({
+      label: f.label,
+      value: results[f.camel],
+    }));
+
+  const onCopy = () => {
+    const text = buildExportRows(results, productName)
+      .map(([l, v]) => `${l}\t${v}`)
+      .join("\n");
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success("계산 결과를 복사했습니다."))
+      .catch(() => toast.error("복사에 실패했습니다."));
+  };
+
+  const onDownloadCsv = () => {
+    // UTF-8 BOM(﻿) — Excel 한글 깨짐 방지.
+    const csv =
+      "﻿" +
+      buildExportRows(results, productName)
+        .map(
+          ([l, v]) =>
+            `"${l.replace(/"/g, '""')}","${String(v).replace(/"/g, '""')}"`,
+        )
+        .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `수출계산결과${productName ? `_${productName}` : ""}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">계산 결과</CardTitle>
+        <CardAction className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={onCopy}>
+            <Copy className="size-4" />
+            복사
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onDownloadCsv}
+          >
+            <Download className="size-4" />
+            CSV
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-6">
-        <KPIRow
-          variant="positive"
-          rows={[
-            { label: "자사몰 예상 판매가", value: results.estimatedPriceOwn },
-            { label: "아마존 예상 판매가", value: results.estimatedPriceAmz },
-            { label: "월마트 예상 판매가", value: results.estimatedPriceWmt },
-          ]}
-        />
+        <KPIRow variant="positive" rows={byGroup("price")} />
         <Separator />
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-foreground">
             수출 및 제반비 (개당)
           </h4>
-          <DetailGrid
-            items={[
-              { label: "[1] 제품 원가", value: results.productCost },
-              { label: "[2] Ocean Freights", value: results.freightCharges },
-              { label: "[3] Customs", value: results.customsCharges },
-              { label: "[4] Devanning", value: results.devanningCost },
-              { label: "[5] Declaration", value: results.declarationFee },
-              { label: "[6] Port", value: results.portCharges },
-              { label: "[7] BOL", value: results.bolValue },
-              { label: "[8] Receiving", value: results.receivingCharges },
-            ]}
-          />
+          <DetailGrid items={byGroup("exportUnit")} />
           <div className="grid gap-2 pt-2 text-sm sm:grid-cols-2">
-            <Subtotal
-              label="수출 및 제반비 총계"
-              value={results.totalExportAndAssociatedCosts}
-            />
-            <Subtotal
-              label="개당 수출 및 제반비"
-              value={results.exportAndAssociatedCostsPerProduct}
-            />
+            {byGroup("subtotal").map((s) => (
+              <Subtotal key={s.label} label={s.label} value={s.value} />
+            ))}
           </div>
         </div>
         <Separator />
-        <KPIRow
-          variant="positive"
-          rows={[
-            {
-              label: "미국 도착 후 이익 (자사몰)",
-              value: results.profitAfterArrivalOwn,
-            },
-            {
-              label: "미국 도착 후 이익 (아마존)",
-              value: results.profitAfterArrivalAmz,
-            },
-            {
-              label: "미국 도착 후 이익 (월마트)",
-              value: results.profitAfterArrivalWmt,
-            },
-          ]}
-        />
+        <KPIRow variant="positive" rows={byGroup("profit")} />
         <Separator />
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-foreground">
             채널별 부가 비용
           </h4>
-          <DetailGrid
-            items={[
-              { label: "풀필먼트 (자사몰)", value: results.fulfillmentCost },
-              { label: "배송비 (자사몰)", value: results.deliveryCostOwn },
-              { label: "아마존 판매수수료", value: results.amazonReferralFee },
-              {
-                label: "아마존 FBA 물류",
-                value: results.amazonFbaLogisticsFee,
-              },
-              {
-                label: "아마존 FBA 입고",
-                value: results.amazonFbaReceivingCost,
-              },
-              { label: "월마트 판매수수료", value: results.walmartReferralFee },
-              {
-                label: "월마트 WFS 물류",
-                value: results.walmartWfsLogisticsFee,
-              },
-              {
-                label: "월마트 WFS 입고",
-                value: results.walmartWfsReceivingCost,
-              },
-            ]}
-          />
+          <DetailGrid items={byGroup("channel")} />
         </div>
         <Separator />
-        <KPIRow
-          variant="result"
-          rows={[
-            { label: "최종 이익 (자사몰)", value: results.ownResult },
-            { label: "최종 이익 (아마존)", value: results.amzResult },
-            { label: "최종 이익 (월마트)", value: results.wmtResult },
-          ]}
-        />
+        <KPIRow variant="result" rows={byGroup("final")} />
       </CardContent>
     </Card>
   );

@@ -15,4 +15,9 @@ urlpatterns = [
         views.CalculationLogListView.as_view(),
         name="calculation_logs",
     ),
+    path(
+        "calculation-logs/<int:pk>/",
+        views.CalculationLogDetailView.as_view(),
+        name="calculation_log_detail",
+    ),
 ]

@@ -742,6 +742,10 @@ class CalculationLog(models.Model):
     own_shop_price = models.DecimalField(max_digits=10, decimal_places=2)
     own_aov = models.DecimalField(max_digits=10, decimal_places=2)
 
+    # 제품 식별(선택) — 이력 구분용. blank+default 라 기존 행/마이그레이션 안전.
+    product_name = models.CharField(max_length=200, blank=True, default="")
+    memo = models.TextField(blank=True, default="")
+
     # 계산 결과 필드
     total_products = models.IntegerField()
     estimated_price_own = models.DecimalField(max_digits=10, decimal_places=2)
