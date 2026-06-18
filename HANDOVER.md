@@ -37,10 +37,10 @@
 - CI: push 시 백엔드(import 검사 + migration + check) + 프론트(lint + 빌드) 자동 검증 (`.github/workflows/ci.yml`)
 - **푸시 토큰은 운영자에게 별도 요청** (`workflow` 권한 포함 필요)
 
-### 배포
-1. 코드 수정 → 커밋 → main 에 push (CI 통과 확인)
-2. EC2에서 코드 받기 → 백엔드 migration/빌드 → 프론트 빌드 → 서비스 재시작
-   - 정확한 명령·서버 경로·서비스 이름은 **내부 인계서**(아래) 참조
+### 배포 (자동)
+- **`main` 에 push 하면 GitHub Actions 가 EC2에 자동 배포**합니다(코드 받기 → migration·빌드 → 서비스 재시작). 직원이 서버에 직접 들어갈 필요 없습니다 — **push만 하면 끝**.
+- 워크플로: `.github/workflows/deploy.yml` — forced-command SSH 라 "HC 배포" 명령만 실행됩니다(다른 서버 영역·다른 시스템 접근 불가).
+- (비상 시 수동 배포 명령·서버 좌표는 운영자 보관 내부 인계서 참조)
 
 ### 계정 추가 / 비밀번호 재설정
 - 비밀번호 재설정: 서버에서 `manage.py changepassword HC`
