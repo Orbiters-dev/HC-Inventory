@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """HC-Inventory 계산기 백엔드 — Django 관리 진입점."""
+
 import os
 import sys
 

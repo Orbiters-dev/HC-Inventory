@@ -15,8 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # --- 시크릿 / 환경 (전부 env, public repo 라 하드코딩 금지) ---
 SECRET_KEY = os.environ.get("HC_SECRET_KEY", "dev-insecure-change-me-in-prod")
 DEBUG = os.environ.get("HC_DEBUG", "0") == "1"
-ALLOWED_HOSTS = [h for h in os.environ.get("HC_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
-CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("HC_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+ALLOWED_HOSTS = [
+    h for h in os.environ.get("HC_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h
+]
+CSRF_TRUSTED_ORIGINS = [
+    o for o in os.environ.get("HC_CSRF_TRUSTED_ORIGINS", "").split(",") if o
+]
 
 # --- 앱 (최소 화이트리스트) ---
 INSTALLED_APPS = [
@@ -76,7 +80,10 @@ DATABASES = {
 AUTH_USER_MODEL = "hc_auth.ExternalUser"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 6}},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 6},
+    },
 ]
 
 # --- DRF: 전역 인증 강제 (계산 5뷰 + 이력뷰 자동 보호). 단일계정이라 권한모델 없음 ---

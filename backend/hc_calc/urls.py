@@ -1,14 +1,18 @@
-"""hc_calc API 라우팅.
-
-P2 에서 배선:
-  - calculate_costs/        (POST, 계산)
-  - amazon-categories/      (GET)
-  - walmart-categories/     (GET)
-  - calculation-logs/       (GET, 계산이력 조회 — 단일계정 전체)
-"""
+"""hc_calc API 라우팅 (전역 IsAuthenticated 보호)."""
 
 from django.urls import path
 
+from . import views
+
 urlpatterns = [
-    # P2 에서 채움
+    path("calculate_costs/", views.calculate_costs_view, name="calculate_costs"),
+    path("amazon-categories/", views.get_amazon_categories, name="amazon_categories"),
+    path(
+        "walmart-categories/", views.get_walmart_categories, name="walmart_categories"
+    ),
+    path(
+        "calculation-logs/",
+        views.CalculationLogListView.as_view(),
+        name="calculation_logs",
+    ),
 ]

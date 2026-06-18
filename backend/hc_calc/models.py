@@ -1,7 +1,6 @@
-import datetime
-
 from django.db import models
 from django.utils import timezone
+
 
 class ShippingRecord(models.Model):
     key = models.IntegerField(unique=True)
@@ -331,7 +330,9 @@ class AmazonProductTier(models.Model):
     median_inch_val = models.FloatField()
     shortes_inch_opr = models.CharField(max_length=2)
     shortes_inch_val = models.FloatField()
-    lengirth_inch_opr = models.CharField(max_length=2, null=True, blank=True, default=None)
+    lengirth_inch_opr = models.CharField(
+        max_length=2, null=True, blank=True, default=None
+    )
     lengirth_inch_val = models.FloatField(null=True, blank=True, default=None)
 
     def __str__(self):
@@ -532,9 +533,7 @@ class WalmartReferralFeeComplex(models.Model):
     type = models.CharField(max_length=50)
 
     def __str__(self):
-        return (
-            f"{self.key} - {self.category} - {self.price_range_operator} {self.price_range_value}"
-        )
+        return f"{self.key} - {self.category} - {self.price_range_operator} {self.price_range_value}"
 
     class Meta:
         db_table = "walmart_referral_fee_complex"
@@ -606,30 +605,50 @@ class WalmartFulfillmentFee(models.Model):
     extra_condition = models.CharField(max_length=100, null=True, blank=True)
     add_category = models.CharField(max_length=50, null=True, blank=True)
     add_val = models.FloatField(null=True, blank=True)
-    add_min_opr = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    add_min_opr = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     add_min_val = models.FloatField(null=True, blank=True)
     add_min_fee = models.FloatField(null=True, blank=True)
-    long_in_fr_opr_1 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    long_in_fr_opr_1 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     long_in_fr_val_1 = models.FloatField(null=True, blank=True)
-    long_in_to_opr_1 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    long_in_to_opr_1 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     long_in_to_val_1 = models.FloatField(null=True, blank=True)
     long_in_add_1 = models.FloatField(null=True, blank=True)
-    med_in_opr = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    med_in_opr = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     med_in_val = models.FloatField(null=True, blank=True)
     med_in_add = models.FloatField(null=True, blank=True)
-    lg_in_fr_opr_1 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    lg_in_fr_opr_1 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     lg_in_fr_val_1 = models.FloatField(null=True, blank=True)
-    lg_in_to_opr_1 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    lg_in_to_opr_1 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     lg_in_to_val_1 = models.FloatField(null=True, blank=True)
     lg_in_add_1 = models.FloatField(null=True, blank=True)
-    long_in_fr_opr_2 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    long_in_fr_opr_2 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     long_in_fr_val_2 = models.FloatField(null=True, blank=True)
-    long_in_to_opr_2 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    long_in_to_opr_2 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     long_in_to_val_2 = models.FloatField(null=True, blank=True)
     long_in_add_2 = models.FloatField(null=True, blank=True)
-    lg_in_fr_opr_2 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    lg_in_fr_opr_2 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     lg_in_fr_val_2 = models.FloatField(null=True, blank=True)
-    lg_in_to_opr_2 = models.CharField(max_length=10, null=True, blank=True)  # 적절한 길이로 수정
+    lg_in_to_opr_2 = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # 적절한 길이로 수정
     lg_in_to_val_2 = models.FloatField(null=True, blank=True)
     lg_in_add_2 = models.FloatField(null=True, blank=True)
 
@@ -696,7 +715,9 @@ class AdditionalDeliveryFee(models.Model):
         if zone_weight.discount == 0:
             self.weighted_average = weighted_sum / total_weight
         else:
-            self.weighted_average = weighted_sum / total_weight * (1 - zone_weight.discount)
+            self.weighted_average = (
+                weighted_sum / total_weight * (1 - zone_weight.discount)
+            )
         super().save(*args, **kwargs)
 
     class Meta:
@@ -734,8 +755,12 @@ class CalculationLog(models.Model):
     port_charges = models.DecimalField(max_digits=10, decimal_places=2)
     bol_value = models.DecimalField(max_digits=10, decimal_places=2)
     receiving_charges = models.DecimalField(max_digits=10, decimal_places=2)
-    total_export_and_associated_costs = models.DecimalField(max_digits=10, decimal_places=2)
-    export_and_associated_costs_per_product = models.DecimalField(max_digits=10, decimal_places=2)
+    total_export_and_associated_costs = models.DecimalField(
+        max_digits=10, decimal_places=2
+    )
+    export_and_associated_costs_per_product = models.DecimalField(
+        max_digits=10, decimal_places=2
+    )
     profit_after_arrival_own = models.DecimalField(max_digits=10, decimal_places=2)
     profit_after_arrival_amz = models.DecimalField(max_digits=10, decimal_places=2)
     profit_after_arrival_wmt = models.DecimalField(max_digits=10, decimal_places=2)
@@ -770,5 +795,3 @@ class CalculationLog(models.Model):
     class Meta:
         db_table = "user_calculation_log"
         verbose_name_plural = "X.[Admin] User Calculation Logs"
-
-

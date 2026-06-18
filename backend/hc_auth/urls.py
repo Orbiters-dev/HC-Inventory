@@ -7,7 +7,6 @@ P5 에서 배선:
   - change-password/  (POST, 마이페이지 비번변경 + 초기PW 강제변경)
 """
 
-from django.urls import path
 
 urlpatterns = [
     # P5 에서 채움
