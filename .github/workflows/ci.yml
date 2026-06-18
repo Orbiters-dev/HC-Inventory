@@ -1,0 +1,45 @@
+name: CI
+
+# HC-Inventory 자체 경량 CI — WONGI lockdown/GPG/signer 와 완전 무관.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt ruff
+      - name: lint (import 게이트)
+        run: ruff check --select F401,F811,F821,E9 hc_calc hc_auth hc_project
+      - name: migrate + check (sqlite)
+        env:
+          HC_DB_ENGINE: sqlite
+          HC_SECRET_KEY: ci-test-key
+        run: |
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate
+          python manage.py check
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - name: build (타입체크 + standalone)
+        run: npm run build
