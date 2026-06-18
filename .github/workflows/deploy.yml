@@ -1,0 +1,30 @@
+name: Deploy to EC2
+
+# 직원은 main 에 push 만 하면 됩니다. 이 워크플로가 forced-command SSH 로
+# EC2 의 /home/ubuntu/hc-deploy.sh "하나만" 실행합니다(키가 그 명령에 묶여 있음).
+# → 이 배포 키로는 HC 배포 외 임의 명령·서버 탐색·WONGI 접근이 불가합니다.
+# secret(DEPLOY_KEY/EC2_HOST)은 저장소 관리자만 설정하며 로그에 노출되지 않습니다.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: hc-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Deploy via forced-command SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # forced-command 라 명령 인자는 무시되고 EC2 의 hc-deploy.sh 가 실행됨
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
+            ubuntu@${{ secrets.EC2_HOST }} deploy
