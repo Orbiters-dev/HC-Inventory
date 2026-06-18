@@ -136,13 +136,10 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
 
-  // 라우트 변경 시 모바일 드로어 자동 닫기(메뉴 열린 채 다음 페이지 렌더 차단).
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
+  // 드로어 닫기 경로 = 메뉴 클릭(onNavigate) · overlay 클릭 · Esc.
+  // (라우트 변경 useEffect+setState 는 React 19 cascading-render 룰 위반이라 두지 않음 —
+  //  드로어 내 네비는 onNavigate 가 이미 닫으므로 별도 effect 불필요.)
   // Esc 로 드로어 닫기(a11y).
   useEffect(() => {
     if (!open) return;
