@@ -1,0 +1,7 @@
+# HC-Inventory 계산기 백엔드 — 최소 의존 (계산기 실사용만)
+Django>=5.0,<5.3
+djangorestframework>=3.15
+psycopg2-binary>=2.9
+gunicorn>=22.0
+# 참고: 원본 calculations 의 barcode/openpyxl/PIL(라벨·엑셀)은 계산기 범위 밖이라 제외.
+# sp-api / requests 등 외부수집 의존도 제외(계산기는 외부 실시간 데이터 미사용).
