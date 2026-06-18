@@ -1,3 +1,4 @@
+// 배포: main 에 push 하면 GitHub Actions 가 EC2 에 자동 반영(forced-command SSH).
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
