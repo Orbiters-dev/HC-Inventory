@@ -40,6 +40,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/calculator", label: "수출 비용 계산기", icon: Calculator },
       { href: "/history", label: "계산 이력", icon: ClipboardList },
+      { href: "/inventory", label: "재고 리포트", icon: Boxes },
     ],
   },
   {
