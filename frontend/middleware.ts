@@ -10,22 +10,32 @@ import { NextRequest, NextResponse } from "next/server";
  * fail-closed: 세션 확인이 실패하면 안전하게 /login 으로 (데이터 노출 방지).
  */
 export async function middleware(request: NextRequest) {
-  try {
-    const statusUrl = new URL("/auth/session/status/", request.url);
-    const res = await fetch(statusUrl, {
-      headers: {
-        cookie: request.headers.get("cookie") ?? "",
-        accept: "application/json",
-      },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.authenticated) {
-        return NextResponse.next();
+  // 서버→자기 공개도메인(https) 호출은 헤어핀 NAT 로 실패할 수 있어, 같은 호스트의
+  // Django(내부 8010) 를 직접 호출한다. (nginx 가 /auth/ → 127.0.0.1:8010 으로 프록시)
+  const candidates = [
+    "http://127.0.0.1:8010/auth/session/status/",
+    new URL("/auth/session/status/", request.url).toString(),
+  ];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          cookie: request.headers.get("cookie") ?? "",
+          accept: "application/json",
+          host: request.nextUrl.host,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.authenticated) {
+          return NextResponse.next();
+        }
+        // 인증 응답은 받았으나 미인증 → 로그인으로
+        return NextResponse.redirect(new URL("/login", request.url));
       }
+    } catch {
+      // 이 후보 실패 → 다음 후보 시도
     }
-  } catch {
-    // 세션 확인 실패 → 로그인으로 (fail-closed)
   }
   return NextResponse.redirect(new URL("/login", request.url));
 }
