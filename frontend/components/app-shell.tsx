@@ -12,6 +12,7 @@ import {
   Boxes,
   Calculator,
   ClipboardList,
+  Container,
   LogOut,
   Menu,
   User,
@@ -26,6 +27,9 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  // 이 Next 앱 밖의 별도 앱(같은 도메인, nginx 가 따로 프록시) — <Link> 클라이언트 전환이
+  // 아니라 전체 페이지 이동이어야 한다.
+  external?: boolean;
 }
 
 interface NavGroup {
@@ -41,6 +45,12 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/calculator", label: "수출 비용 계산기", icon: Calculator },
       { href: "/history", label: "계산 이력", icon: ClipboardList },
       { href: "/inventory", label: "재고 리포트", icon: Boxes },
+      {
+        href: "/loading/",
+        label: "컨테이너 적재 최적화",
+        icon: Container,
+        external: true,
+      },
     ],
   },
   {
@@ -93,23 +103,35 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             <ul className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const active = isActive(pathname, item.href);
+                const active = !item.external && isActive(pathname, item.href);
+                const className = cn(
+                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                );
+                const content = (
+                  <>
+                    <Icon className="size-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </>
+                );
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onNavigate}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                        active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                      )}
-                    >
-                      <Icon className="size-4 shrink-0" />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
+                    {item.external ? (
+                      <a href={item.href} onClick={onNavigate} className={className}>
+                        {content}
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={onNavigate}
+                        aria-current={active ? "page" : undefined}
+                        className={className}
+                      >
+                        {content}
+                      </Link>
+                    )}
                   </li>
                 );
               })}
