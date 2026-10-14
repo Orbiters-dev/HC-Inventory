@@ -11155,7 +11155,7 @@
         <div style="overflow-x:auto">
                 <table class="explorer-table" id="inv-table">
                     <thead><tr>
-                        <th onclick="sortInventoryTable('title')" style="min-width:250px">Product</th>
+                        <th onclick="sortInventoryTable('title')" style="min-width:300px">Product</th>
                         <th onclick="sortInventoryTable('brand')" style="min-width:90px">Brand</th>
                         <th onclick="sortInventoryTable('entity')" style="min-width:60px">Entity</th>
                         <th onclick="sortInventoryTable('case')" style="min-width:80px">Case</th>
@@ -28458,7 +28458,7 @@ function renderInventoryRows(data) {
         }
 
         html += '<tr>' +
-            '<td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + r.t.replace(/"/g, '&quot;') + '"><strong style="font-size:12px">' + ((dn) => dn.length > 80 ? dn.substring(0,80)+'...' : dn)(r.br === 'Grosmimi' ? r.t.replace(/^Grosmimi\s*/i, '').replace(/^GROSMIMI\s*/i, '') : r.t) + '</strong>' + ents +
+            '<td style="min-width:300px;max-width:460px;white-space:normal;word-break:break-word;line-height:1.35" title="' + r.t.replace(/"/g, '&quot;') + '"><strong style="font-size:12px">' + ((dn) => dn.length > 160 ? dn.substring(0,160)+'...' : dn)(r.br === 'Grosmimi' ? r.t.replace(/^Grosmimi\s*/i, '').replace(/^GROSMIMI\s*/i, '') : r.t) + '</strong>' + ents +
             '<div style="font-size:10px;color:#888">' + (r.b || '') + (r.a.startsWith('NOASIN:') ? '' : ' · ' + r.a) + expHtml + '</div></td>' +
             '<td>' + r.br + '</td>' +
             '<td>' + r.en.map(e => ENTITY_MAP[e] || e).join(', ') + '</td>' +
